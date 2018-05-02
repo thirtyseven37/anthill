@@ -12,7 +12,6 @@ export interface AntResultDefinitionPart {
   name: string;
   toResult?: boolean;
   ifMissing?: any;
-  check?: () => boolean;
 }
 
 export interface AntResultDefinition {
@@ -25,7 +24,7 @@ export interface AntResultDefinition {
 export interface AntConfig {
   sources: AntSourceDefinition[];
   results: AntResultDefinition[];
-  additionalConfig?: any[];
+  additionalConfig?: AntAdditionalConfig;
 }
 
 export interface AntEvent {
@@ -39,10 +38,16 @@ export interface AntResultEvent extends AntEvent {
   toResult: boolean;
 }
 
+export interface AntAdditionalConfig {
+  argsToCheckFunctions?: any[];
+  argsToHandlers?: any[];
+  argsToModifiers?: any[];
+}
+
 export const fromObservable = (source$: Observable<AntSourceEvent>, config: AntConfig): Observable<AntResultEvent> => {
   // validate configs
-  const sourceObject = mapper.mapSingleSourceToSourceObject(source$, config.sources);
-  const resultObject = mapper.mapResultsDefinitionsToSourceObject(sourceObject, config.results);
+  const sourceObject = mapper.mapSingleSourceToSourceObject(source$, config.sources, config.additionalConfig);
+  const resultObject = mapper.mapResultsDefinitionsToSourceObject(sourceObject, config.results, config.additionalConfig);
   // const products$ = sourceObject['products']
   //   .subscribe(console.log, console.error, () => { console.log('FINISHED') });
 

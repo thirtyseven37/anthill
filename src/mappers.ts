@@ -1,18 +1,26 @@
 import * as R from "ramda";
 import { Observable } from "@reactivex/rxjs";
-import { AntResultDefinition, AntResultDefinitionPart, AntSourceDefinition, AntSourceEvent } from "./index";
+import {
+  AntAdditionalConfig, AntResultDefinition, AntResultDefinitionPart, AntSourceDefinition,
+  AntSourceEvent
+} from "./index";
 
 /*
 |--------------------------------------------------------------------------
 | Exported functions
 |--------------------------------------------------------------------------
 */
-
-export const mapResultsDefinitionsToSourceObject = (sourceObject: any, resultDefinitions: AntResultDefinition[]): any => {
+export const mapResultsDefinitionsToSourceObject = (sourceObject: any, resultDefinitions: AntResultDefinition[], config: AntAdditionalConfig = {}): any => {
   const results: any = [];
 
   resultDefinitions
-    .filter((resultDefinition) => !resultDefinition.check || resultDefinition.check())
+    .filter((resultDefinition) =>  {
+      let args = [];
+      if (config.argsToCheckFunctions && config.argsToCheckFunctions.length > 0) {
+        args = config.argsToCheckFunctions;
+      }
+      return !resultDefinition.check || resultDefinition.check(...args);
+    })
     .forEach((resultDefinition) => {
       const args: Array<Observable<any>> = resultDefinition.args.map((arg) => {
         if (sourceObject[arg]) {
@@ -26,7 +34,7 @@ export const mapResultsDefinitionsToSourceObject = (sourceObject: any, resultDef
 
       const singleDefinitionResult$ = Observable
         .zip(...args)
-        .map(getHandlerFromResultDefinition(resultDefinition));
+        .map(getHandlerFromResultDefinition(resultDefinition, config));
 
       resultDefinition.parts.forEach((part: AntResultDefinitionPart, index) => {
         let resultForDefinition$ = singleDefinitionResult$.map((resultArray: any) => resultArray[index]);
@@ -43,11 +51,11 @@ export const mapResultsDefinitionsToSourceObject = (sourceObject: any, resultDef
   return results;
 };
 
-export const mapSingleSourceToSourceObject = (source$: Observable<AntSourceEvent>, definitions: AntSourceDefinition[]): any => {
+export const mapSingleSourceToSourceObject = (source$: Observable<AntSourceEvent>, definitions: AntSourceDefinition[], config: AntAdditionalConfig = {}): any => {
   const shared$ = source$.share();
 
   return definitions
-    .map(mapSingleEventToStream(shared$))
+    .map(mapSingleEventToStream(shared$, config))
     .reduce((acc: any, { stream$, name }) => {
       acc[name] = stream$;
       return acc;
@@ -60,7 +68,7 @@ export const mapSingleSourceToSourceObject = (source$: Observable<AntSourceEvent
 |--------------------------------------------------------------------------
 */
 
-const mapSingleEventToStream = R.curry((shared$: Observable<AntSourceEvent>, definition: AntSourceDefinition): { stream$: Observable<any>, name: string } => {
+const mapSingleEventToStream = R.curry((shared$: Observable<AntSourceEvent>, config: AntAdditionalConfig, definition: AntSourceDefinition): { stream$: Observable<any>, name: string } => {
   let stream$ = shared$
     .filter((sourceEvent: AntSourceEvent) => sourceEvent.name === definition.name)
     .map((sourceEvent: AntSourceEvent) => {
@@ -78,7 +86,12 @@ const mapSingleEventToStream = R.curry((shared$: Observable<AntSourceEvent>, def
       }
 
       const newPayload = definition.modifiers.reduce((prevResult, modifier) => {
-        return modifier(prevResult);
+        let args = [prevResult];
+        if (config.argsToModifiers && config.argsToModifiers.length > 1) {
+          args = [config.argsToModifiers, ...args];
+        }
+
+        return modifier(...args);
       }, payload);
 
       return {
@@ -97,8 +110,14 @@ const mapSingleEventToStream = R.curry((shared$: Observable<AntSourceEvent>, def
   return {stream$, name};
 });
 
-const getHandlerFromResultDefinition = R.curry((resultDefinition: any, argsAsValues: any): any => {
-  const handlerResult = resultDefinition.handler(...argsAsValues);
+const getHandlerFromResultDefinition = R.curry((resultDefinition: any, config: AntAdditionalConfig, argsAsValues: any): any => {
+  let args = argsAsValues;
+
+  if (config.argsToHandlers && config.argsToHandlers.length > 0) {
+    args = [...config.argsToHandlers, ...argsAsValues];
+  }
+
+  const handlerResult = resultDefinition.handler(...args);
 
   if (resultDefinition.parts.length !== handlerResult.length) {
     throw new Error(`[00] WRONG HANDLER RESULT LENGTH (${handlerResult.length}) FOR ${JSON.stringify(resultDefinition.parts.map((el: any) => el.name))}`);
