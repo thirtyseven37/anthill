@@ -1,5 +1,12 @@
+import * as R from "ramda";
 import { Observable } from "@reactivex/rxjs";
 import { AntResultDefinition, AntResultDefinitionPart, AntSourceDefinition, AntSourceEvent } from "./index";
+
+/*
+|--------------------------------------------------------------------------
+| Exported functions
+|--------------------------------------------------------------------------
+*/
 
 export const mapResultsDefinitionsToSourceObject = (sourceObject: any, resultDefinitions: AntResultDefinition[]): any => {
   const results: any = [];
@@ -9,13 +16,9 @@ export const mapResultsDefinitionsToSourceObject = (sourceObject: any, resultDef
     .forEach((resultDefinition) => {
       const args: Array<Observable<any>> = resultDefinition.args.map((arg) => {
         if (sourceObject[arg]) {
-          return sourceObject[arg].map((el: any) => {
-            return el.payload;
-          });
+          return sourceObject[arg].map((el: any) => el.payload);
         } else if (results[arg]) {
-          return results[arg].map((el: any) => {
-            return el.payload;
-          });
+          return results[arg].map((el: any) => el.payload);
         } else {
           return Observable.empty();
         }
@@ -23,32 +26,18 @@ export const mapResultsDefinitionsToSourceObject = (sourceObject: any, resultDef
 
       const singleDefinitionResult$ = Observable
         .zip(...args)
-        .map((argsAsValues) => {
-          const handlerResult = resultDefinition.handler(...argsAsValues);
-          if (resultDefinition.parts.length !== handlerResult.length) {
-            throw new Error(`[00] WRONG HANDLER RESULT LENGTH (${handlerResult.length}) FOR ${JSON.stringify(resultDefinition.parts.map(el => el.name))}`);
-          }
+        .map(getHandlerFromResultDefinition(resultDefinition));
 
-          return handlerResult;
-        });
+      resultDefinition.parts.forEach((part: AntResultDefinitionPart, index) => {
+        let resultForDefinition$ = singleDefinitionResult$.map((resultArray: any) => resultArray[index]);
 
-      resultDefinition.parts
-        .forEach((part: AntResultDefinitionPart, index) => {
-          let resultForDefinition$ = singleDefinitionResult$
-            .map((resultArray) => resultArray[index]);
+        if (part.hasOwnProperty("ifMissing")) {
+          resultForDefinition$ = resultForDefinition$.defaultIfEmpty(part.ifMissing);
+        }
 
-          if (part.hasOwnProperty("ifMissing")) {
-            resultForDefinition$ = resultForDefinition$
-              .defaultIfEmpty(part.ifMissing);
-          }
-
-          resultForDefinition$ = resultForDefinition$.map((payload) => {
-            return { name: part.name, payload, toResult: part.toResult === undefined ? true : part.toResult }
-          })
-            .share();
-
-          results[part.name] = resultForDefinition$;
-        });
+        resultForDefinition$ = resultForDefinition$.map(buildResultDefinitionObject(part)).share();
+        results[part.name] = resultForDefinition$;
+      });
     });
 
   return results;
@@ -65,41 +54,63 @@ export const mapSingleSourceToSourceObject = (source$: Observable<AntSourceEvent
     }, {});
 };
 
-export const mapSingleEventToStream = (shared$: Observable<AntSourceEvent>) => {
-  return (definition: AntSourceDefinition): { stream$: Observable<any>, name: string } => {
-    let stream$ = shared$
-      .filter((sourceEvent: AntSourceEvent) => sourceEvent.name === definition.name)
-      .map((sourceEvent: AntSourceEvent) => {
-        return {
-          ...sourceEvent,
-          toResult: definition.toResult ? definition.toResult : false
-        };
-      });
+/*
+|--------------------------------------------------------------------------
+| Private functions
+|--------------------------------------------------------------------------
+*/
 
+const mapSingleEventToStream = R.curry((shared$: Observable<AntSourceEvent>, definition: AntSourceDefinition): { stream$: Observable<any>, name: string } => {
+  let stream$ = shared$
+    .filter((sourceEvent: AntSourceEvent) => sourceEvent.name === definition.name)
+    .map((sourceEvent: AntSourceEvent) => {
+      return {
+        ...sourceEvent,
+        toResult: definition.toResult ? definition.toResult : false
+      };
+    });
+
+  stream$ = stream$
+    .map((sourceEvent: any) => {
+      const payload = sourceEvent.payload;
+      if (!definition.modifiers) {
+        return sourceEvent;
+      }
+
+      const newPayload = definition.modifiers.reduce((prevResult, modifier) => {
+        return modifier(prevResult);
+      }, payload);
+
+      return {
+        ...sourceEvent,
+        payload: newPayload
+      };
+    });
+
+  if (definition.hasOwnProperty("ifMissing")) {
     stream$ = stream$
-      .map((sourceEvent: any) => {
-        const payload = sourceEvent.payload;
-        if (!definition.modifiers) {
-          return sourceEvent;
-        }
+      .defaultIfEmpty({ name: definition.name, payload: definition.ifMissing, toResult: definition.toResult ? definition.toResult : false});
+  }
 
-        const newPayload = definition.modifiers.reduce((prevResult, modifier) => {
-          return modifier(prevResult);
-        }, payload);
+  const name = definition.name;
 
-        return {
-          ...sourceEvent,
-          payload: newPayload
-        };
-      });
+  return {stream$, name};
+});
 
-    if (definition.hasOwnProperty("ifMissing")) {
-      stream$ = stream$
-        .defaultIfEmpty({ name: definition.name, payload: definition.ifMissing, toResult: definition.toResult ? definition.toResult : false});
-    }
+const getHandlerFromResultDefinition = R.curry((resultDefinition: any, argsAsValues: any): any => {
+  const handlerResult = resultDefinition.handler(...argsAsValues);
 
-    const name = definition.name;
+  if (resultDefinition.parts.length !== handlerResult.length) {
+    throw new Error(`[00] WRONG HANDLER RESULT LENGTH (${handlerResult.length}) FOR ${JSON.stringify(resultDefinition.parts.map((el: any) => el.name))}`);
+  }
 
-    return {stream$, name};
+  return handlerResult;
+});
+
+const buildResultDefinitionObject = R.curry((part: any, payload: any) => {
+  return {
+    name: part.name,
+    payload,
+    toResult: part.toResult === undefined ? true : part.toResult
   };
-};
+});

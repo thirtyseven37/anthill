@@ -18,7 +18,8 @@
   "license": "ISC",
   "dependencies": {
     "@reactivex/rxjs": "^5.5.10",
-    "ramda-ts": "^0.1.2",
+    "@types/ramda": "^0.25.24",
+    "ramda": "^0.25.0",
     "typescript": "^2.6.2"
   },
   "devDependencies": {
