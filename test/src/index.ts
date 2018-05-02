@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { fromObservable } from "../../src/index";
-import { getMockedSource, getMockedConfig } from "../../src/source_mock";
+import { getMockedSource, getMockedConfig } from "../mock/source";
 
 describe("Anthill main exported functions test", () => {
   it("Shoud be fromObservable response arrays", () => {
@@ -21,10 +21,27 @@ describe("Anthill main exported functions test", () => {
       return result;
     };
 
-    fromObservable(getMockedSource(), getMockedConfig())
+    const sortObjectById = (first: any, second: any) => {
+      if (first.id < second.id) {
+        return -1;
+      }
+
+      if (first.id > second.id) {
+        return 1;
+      }
+
+      return 0;
+    };
+
+    const testFromObservable = fromObservable(getMockedSource(), getMockedConfig())
       .map((response) => response.payload)
       .filter(Array.isArray)
       .reduce(reduceObjectArrays, [])
-      .subscribe((actual) => expect(expected).to.be.deep.equal(actual));
+      .map((actual) => actual.sort(sortObjectById))
+      .toPromise();
+
+    testFromObservable
+      .then((actual) => expect(expected).to.be.deep.equal(actual))
+      .catch(console.log);
   });
 });
