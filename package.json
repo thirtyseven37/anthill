@@ -1,5 +1,5 @@
 {
-  "name": "anthill",
+  "name": "@thirtyseven37/anthill",
   "version": "0.1.0",
   "description": "A Node.js module that manages Rx events.",
   "main": "dist/index.js",
