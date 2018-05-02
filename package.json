@@ -2,12 +2,17 @@
   "name": "anthill",
   "version": "0.1.0",
   "description": "A Node.js module that manages Rx events.",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types" : "dist/index.d.ts",
   "scripts": {
     "clean": "rm -rf dist/*",
     "test": "./node_modules/.bin/mocha --require node_modules/ts-node/register \"test/**/*.ts\"",
     "build": "npm run clean  && ./node_modules/.bin/tsc",
     "watch": "nodemon --exec ./node_modules/.bin/ts-node -- ./src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thirtyseven37/anthill"
   },
   "author": "p.sienkiewicz@tme3c.com && m.lepek@tme3c.com",
   "license": "ISC",
