@@ -3,7 +3,7 @@ import { fromObservable } from "../../src/index";
 import { getMockedSource, getMockedConfig } from "../mock/source";
 
 describe("Anthill main exported functions test", () => {
-  it("Shoud be fromObservable response arrays", () => {
+  it("Should be fromObservable response arrays", () => {
     const expected = [
       { id: 1, symbol: "1N4002", parameters: [21, 37], checked: true },
       { id: 2, symbol: "1N4006", parameters: [13, 18], checked: true },
