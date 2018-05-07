@@ -10,7 +10,11 @@
 
     /* Strict Type-Checking Options */
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": "./",
+    "paths": {
+      "*": [ "node_modules/@types/*", "*"]
+    }
   },
   "include": [
     "src/**/*.ts"
