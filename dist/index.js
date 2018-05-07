@@ -7,7 +7,7 @@ exports.fromObservable = (source$, config) => {
     const sourceObject = mapper.mapSingleSourceToSourceObject(source$, config.sources, config.additionalConfig);
     const resultObject = mapper.mapResultsDefinitionsToSourceObject(sourceObject, config.results, config.additionalConfig);
     if (!config.additionalConfig || !config.additionalConfig.sameKeysInResult) {
-        resultObject.keys.forEach((key) => {
+        Object.keys(resultObject).forEach((key) => {
             if (sourceObject[key]) {
                 throw new Error(`[00] RESULT STREAM KEY (${key}) EXISTS IN SOURCE.`);
             }

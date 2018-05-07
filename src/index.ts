@@ -51,7 +51,7 @@ export const fromObservable = (source$: Observable<AntSourceEvent>, config: AntC
   const resultObject = mapper.mapResultsDefinitionsToSourceObject(sourceObject, config.results, config.additionalConfig);
 
   if (!config.additionalConfig || !config.additionalConfig.sameKeysInResult) {
-    resultObject.keys.forEach((key: string) => {
+    Object.keys(resultObject).forEach((key: string) => {
       if (sourceObject[key]) {
         throw new Error(`[00] RESULT STREAM KEY (${key}) EXISTS IN SOURCE.`);
       }
