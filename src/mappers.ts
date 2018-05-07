@@ -92,7 +92,7 @@ const runModifiers = R.curry((definition: AntSourceDefinition, config: AntAdditi
     return sourceEvent;
   }
 
-  const newPayload = definition.modifiers.reduce((prevResult, modifier) => {
+  const newEvent = definition.modifiers.reduce((prevResult, modifier) => {
     let args = [prevResult];
 
     if (config.argsToModifiers && config.argsToModifiers.length > 1) {
@@ -100,12 +100,9 @@ const runModifiers = R.curry((definition: AntSourceDefinition, config: AntAdditi
     }
 
     return modifier(...args);
-  }, payload);
+  }, sourceEvent);
 
-  return {
-    ...sourceEvent,
-    payload: newPayload
-  };
+  return newEvent;
 });
 
 const getHandlerFromResultDefinition = R.curry((resultDefinition: any, config: AntAdditionalConfig, argsAsValues: any): any => {
