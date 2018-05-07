@@ -70,14 +70,14 @@ const runModifiers = R.curry((definition, config, sourceEvent) => {
     if (!definition.modifiers) {
         return sourceEvent;
     }
-    const newPayload = definition.modifiers.reduce((prevResult, modifier) => {
+    const newEvent = definition.modifiers.reduce((prevResult, modifier) => {
         let args = [prevResult];
         if (config.argsToModifiers && config.argsToModifiers.length > 1) {
             args = [config.argsToModifiers, ...args];
         }
         return modifier(...args);
-    }, payload);
-    return Object.assign({}, sourceEvent, { payload: newPayload });
+    }, sourceEvent);
+    return newEvent;
 });
 const getHandlerFromResultDefinition = R.curry((resultDefinition, config, argsAsValues) => {
     let args = argsAsValues;
