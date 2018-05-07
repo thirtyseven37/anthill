@@ -11,7 +11,7 @@ export interface AntResultDefinitionPart {
     ifMissing?: any;
 }
 export interface AntResultDefinition {
-    check?: () => boolean;
+    check?: (...params: any[]) => boolean;
     parts: AntResultDefinitionPart[];
     args: string[];
     handler: (...params: any[]) => any;
