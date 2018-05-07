@@ -8,7 +8,7 @@ const rxjs_1 = require("@reactivex/rxjs");
 |--------------------------------------------------------------------------
 */
 exports.mapResultsDefinitionsToSourceObject = (sourceObject, resultDefinitions, config = {}) => {
-    const results = [];
+    const results = sourceObject;
     resultDefinitions
         .filter((resultDefinition) => {
         let args = [];
@@ -19,10 +19,7 @@ exports.mapResultsDefinitionsToSourceObject = (sourceObject, resultDefinitions, 
     })
         .forEach((resultDefinition) => {
         const args = resultDefinition.args.map((arg) => {
-            if (sourceObject[arg]) {
-                return sourceObject[arg].map((el) => el.payload);
-            }
-            else if (results[arg]) {
+            if (results[arg]) {
                 return results[arg].map((el) => el.payload);
             }
             else {

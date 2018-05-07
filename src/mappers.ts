@@ -12,7 +12,7 @@ import {
 */
 
 export const mapResultsDefinitionsToSourceObject = (sourceObject: any, resultDefinitions: AntResultDefinition[], config: AntAdditionalConfig = {}): any => {
-  const results: any = [];
+  const results: any = sourceObject;
 
   resultDefinitions
     .filter((resultDefinition) =>  {
@@ -24,9 +24,7 @@ export const mapResultsDefinitionsToSourceObject = (sourceObject: any, resultDef
     })
     .forEach((resultDefinition) => {
       const args: Array<Observable<any>> = resultDefinition.args.map((arg) => {
-        if (sourceObject[arg]) {
-          return sourceObject[arg].map((el: any) => el.payload);
-        } else if (results[arg]) {
+        if (results[arg]) {
           return results[arg].map((el: any) => el.payload);
         } else {
           return Observable.empty();
