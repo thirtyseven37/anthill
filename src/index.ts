@@ -42,12 +42,21 @@ export interface AntAdditionalConfig {
   argsToCheckFunctions?: any[];
   argsToHandlers?: any[];
   argsToModifiers?: any[];
+  sameKeysInResult?: boolean;
 }
 
 export const fromObservable = (source$: Observable<AntSourceEvent>, config: AntConfig): Observable<AntResultEvent> => {
   // validate configs
   const sourceObject = mapper.mapSingleSourceToSourceObject(source$, config.sources, config.additionalConfig);
   const resultObject = mapper.mapResultsDefinitionsToSourceObject(sourceObject, config.results, config.additionalConfig);
+
+  if (!config.additionalConfig || !config.additionalConfig.sameKeysInResult) {
+    resultObject.keys.forEach((key: string) => {
+      if (sourceObject[key]) {
+        throw new Error(`[00] RESULT STREAM KEY (${key}) EXISTS IN SOURCE.`);
+      }
+    });
+  }
   // const products$ = sourceObject['products']
   //   .subscribe(console.log, console.error, () => { console.log('FINISHED') });
 

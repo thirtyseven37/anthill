@@ -6,6 +6,13 @@ exports.fromObservable = (source$, config) => {
     // validate configs
     const sourceObject = mapper.mapSingleSourceToSourceObject(source$, config.sources, config.additionalConfig);
     const resultObject = mapper.mapResultsDefinitionsToSourceObject(sourceObject, config.results, config.additionalConfig);
+    if (!config.additionalConfig || !config.additionalConfig.sameKeysInResult) {
+        resultObject.keys.forEach((key) => {
+            if (sourceObject[key]) {
+                throw new Error(`[00] RESULT STREAM KEY (${key}) EXISTS IN SOURCE.`);
+            }
+        });
+    }
     // const products$ = sourceObject['products']
     //   .subscribe(console.log, console.error, () => { console.log('FINISHED') });
     const result$ = rxjs_1.Observable
