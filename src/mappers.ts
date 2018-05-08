@@ -41,7 +41,8 @@ export const mapResultsDefinitionsToSourceObject = (sourceObject: any, resultDef
 
       const singleDefinitionResult$ = Observable
         .zip(...args)
-        .map(getHandlerFromResultDefinition(resultDefinition, config));
+        .map(getHandlerFromResultDefinition(resultDefinition, config))
+        .share();
 
       resultDefinition.parts.forEach(
         (part: AntResultDefinitionPart, index) => results[part.name] = resultForDefinitionFromPart(

@@ -36,7 +36,8 @@ exports.mapResultsDefinitionsToSourceObject = (sourceObject, resultDefinitions, 
         });
         const singleDefinitionResult$ = rxjs_1.Observable
             .zip(...args)
-            .map(getHandlerFromResultDefinition(resultDefinition, config));
+            .map(getHandlerFromResultDefinition(resultDefinition, config))
+            .share();
         resultDefinition.parts.forEach((part, index) => results[part.name] = resultForDefinitionFromPart(singleDefinitionResult$, part, index));
     });
     return results;
