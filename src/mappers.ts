@@ -93,7 +93,7 @@ const runModifiers = R.curry((definition: AntSourceDefinition, config: AntAdditi
   const newEvent = definition.modifiers.reduce((prevResult, modifier) => {
     let args = [prevResult];
 
-    if (config.argsToModifiers && config.argsToModifiers.length > 1) {
+    if (config.argsToModifiers && config.argsToModifiers.length > 0) {
       args = [config.argsToModifiers, ...args];
     }
 
