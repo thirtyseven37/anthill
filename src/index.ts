@@ -47,7 +47,6 @@ export interface AntAdditionalConfig {
   argsToCheckFunctions?: any[];
   argsToHandlers?: any[];
   argsToModifiers?: any[];
-  sameKeysInResult?: boolean;
 }
 
 export const fromObservable = (source$: Observable<AntSourceEvent>, config: AntConfig): Observable<AntResultEvent> => {
@@ -55,18 +54,11 @@ export const fromObservable = (source$: Observable<AntSourceEvent>, config: AntC
   const sourceObject = mapper.mapSingleSourceToSourceObject(source$, config.sources, config.additionalConfig);
   const resultObject = mapper.mapResultsDefinitionsToSourceObject(sourceObject, config.results, config.additionalConfig);
 
-  if (!config.additionalConfig || !config.additionalConfig.sameKeysInResult) {
-    Object.keys(resultObject).forEach((key: string) => {
-      if (sourceObject[key]) {
-        throw new Error(`[00] RESULT STREAM KEY (${key}) EXISTS IN SOURCE.`);
-      }
-    });
-  }
   // const products$ = sourceObject['products']
   //   .subscribe(console.log, console.error, () => { console.log('FINISHED') });
 
   const result$ = Observable
-    .from(Object.entries({ ...sourceObject, ...resultObject }))
+    .from(Object.entries(resultObject))
     .map((el): Observable<AntResultEvent> => {
       return el[1];
     })

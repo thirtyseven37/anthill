@@ -38,7 +38,6 @@ export interface AntAdditionalConfig {
     argsToCheckFunctions?: any[];
     argsToHandlers?: any[];
     argsToModifiers?: any[];
-    sameKeysInResult?: boolean;
 }
 export declare const fromObservable: (source$: Observable<AntSourceEvent>, config: AntConfig) => Observable<AntResultEvent>;
 export declare const fromPromise: (source: Promise<AntSourceEvent[]>, config: AntConfig) => Observable<AntResultEvent>;

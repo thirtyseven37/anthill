@@ -6,17 +6,10 @@ exports.fromObservable = (source$, config) => {
     // validate configs
     const sourceObject = mapper.mapSingleSourceToSourceObject(source$, config.sources, config.additionalConfig);
     const resultObject = mapper.mapResultsDefinitionsToSourceObject(sourceObject, config.results, config.additionalConfig);
-    if (!config.additionalConfig || !config.additionalConfig.sameKeysInResult) {
-        Object.keys(resultObject).forEach((key) => {
-            if (sourceObject[key]) {
-                throw new Error(`[00] RESULT STREAM KEY (${key}) EXISTS IN SOURCE.`);
-            }
-        });
-    }
     // const products$ = sourceObject['products']
     //   .subscribe(console.log, console.error, () => { console.log('FINISHED') });
     const result$ = rxjs_1.Observable
-        .from(Object.entries(Object.assign({}, sourceObject, resultObject)))
+        .from(Object.entries(resultObject))
         .map((el) => {
         return el[1];
     })

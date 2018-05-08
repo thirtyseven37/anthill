@@ -92,8 +92,6 @@ const mapSingleEventToStream = R.curry((shared$: Observable<AntSourceEvent>, con
 });
 
 const runModifiers = R.curry((definition: AntSourceDefinition, config: AntAdditionalConfig, sourceEvent: any) => {
-  const payload = sourceEvent.payload;
-
   if (!definition.modifiers) {
     return sourceEvent;
   }
