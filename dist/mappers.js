@@ -78,7 +78,7 @@ const runModifiers = R.curry((definition, config, sourceEvent) => {
     const newEvent = definition.modifiers.reduce((prevResult, modifier) => {
         let args = [prevResult];
         if (config.argsToModifiers && config.argsToModifiers.length > 0) {
-            args = [config.argsToModifiers, ...args];
+            args = [...config.argsToModifiers, ...args];
         }
         return modifier(...args);
     }, sourceEvent);
