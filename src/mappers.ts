@@ -1,7 +1,7 @@
 import * as R from "ramda";
 import { Observable } from "@reactivex/rxjs";
 import {
-  AntAdditionalConfig, AntResultDefinition, AntResultDefinitionPart, AntSourceDefinition,
+  AntAdditionalConfig, AntResultDefinition, AntResultDefinitionArgument, AntResultDefinitionPart, AntSourceDefinition,
   AntSourceEvent
 } from "./index";
 
@@ -23,13 +23,21 @@ export const mapResultsDefinitionsToSourceObject = (sourceObject: any, resultDef
       return !resultDefinition.check || resultDefinition.check(...args);
     })
     .forEach((resultDefinition) => {
-      const args: Array<Observable<any>> = resultDefinition.args.map((arg) => {
-        if (results[arg]) {
-          return results[arg].map((el: any) => el.payload);
-        } else {
-          return Observable.empty();
-        }
-      });
+      const args: Array<Observable<any>> = resultDefinition.args
+        .filter((resultDefinitionArgument: AntResultDefinitionArgument) =>  {
+          let args = [];
+          if (config.argsToCheckFunctions && config.argsToCheckFunctions.length > 0) {
+            args = config.argsToCheckFunctions;
+          }
+          return !resultDefinitionArgument.check || resultDefinitionArgument.check(...args);
+        })
+        .map((arg: AntResultDefinitionArgument) => {
+          if (results[arg.name]) {
+            return results[arg.name].map((el: any) => el.payload);
+          } else {
+            return Observable.empty();
+          }
+        });
 
       const singleDefinitionResult$ = Observable
         .zip(...args)

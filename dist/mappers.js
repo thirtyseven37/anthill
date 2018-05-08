@@ -18,9 +18,17 @@ exports.mapResultsDefinitionsToSourceObject = (sourceObject, resultDefinitions, 
         return !resultDefinition.check || resultDefinition.check(...args);
     })
         .forEach((resultDefinition) => {
-        const args = resultDefinition.args.map((arg) => {
-            if (results[arg]) {
-                return results[arg].map((el) => el.payload);
+        const args = resultDefinition.args
+            .filter((resultDefinitionArgument) => {
+            let args = [];
+            if (config.argsToCheckFunctions && config.argsToCheckFunctions.length > 0) {
+                args = config.argsToCheckFunctions;
+            }
+            return !resultDefinitionArgument.check || resultDefinitionArgument.check(...args);
+        })
+            .map((arg) => {
+            if (results[arg.name]) {
+                return results[arg.name].map((el) => el.payload);
             }
             else {
                 return rxjs_1.Observable.empty();

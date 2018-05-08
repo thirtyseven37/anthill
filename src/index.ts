@@ -17,8 +17,13 @@ export interface AntResultDefinitionPart {
 export interface AntResultDefinition {
   check?: (...params: any[]) => boolean;
   parts: AntResultDefinitionPart[];
-  args: string[];
+  args: AntResultDefinitionArgument[];
   handler: (...params: any[]) => any;
+}
+
+export interface AntResultDefinitionArgument {
+  name: string;
+  check?: (...params: any[]) => boolean;
 }
 
 export interface AntConfig {
