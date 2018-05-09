@@ -69,7 +69,7 @@ const mapSingleEventToStream = R.curry((shared$, config, definition) => {
         });
     }
     const name = definition.name;
-    return { stream$, name };
+    return { stream$: stream$.share(), name };
 });
 const runModifiers = R.curry((definition, config, sourceEvent) => {
     if (!definition.modifiers) {

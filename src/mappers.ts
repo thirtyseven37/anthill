@@ -89,7 +89,7 @@ const mapSingleEventToStream = R.curry((shared$: Observable<AntSourceEvent>, con
 
   const name = definition.name;
 
-  return {stream$, name};
+  return {stream$: stream$.share(), name};
 });
 
 const runModifiers = R.curry((definition: AntSourceDefinition, config: AntAdditionalConfig, sourceEvent: any) => {
