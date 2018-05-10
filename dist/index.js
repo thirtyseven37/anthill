@@ -5,7 +5,6 @@ const rxjs_1 = require("@reactivex/rxjs");
 const mappers_1 = require("./mappers");
 exports.fromObservable = (source$, config) => {
     // validate configs
-    console.log("FROM PACKAGE");
     const sourceObject = mapper.mapSingleSourceToSourceObject(source$, config.sources, config.additionalConfig);
     const resultObject = mapper.mapResultsDefinitionsToSourceObject(sourceObject, config.results, config.additionalConfig);
     // const products$ = sourceObject['products']
