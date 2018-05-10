@@ -145,6 +145,8 @@ const resultForDefinitionFromPart = (singleDefinitionResult$: any, part: AntResu
 };
 
 const buildResultFromSourceEvent = R.curry((definition: AntSourceDefinition, sourceEvent: AntSourceEvent) => {
+  console.log(definition.name, definition.toResult);
+
   return {
     ...sourceEvent,
     toResult: definition.toResult ? definition.toResult : false

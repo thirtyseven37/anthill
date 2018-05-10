@@ -32,14 +32,12 @@ export interface AntConfig {
   additionalConfig?: AntAdditionalConfig;
 }
 
-export interface AntEvent {
+export interface AntSourceEvent {
   name: string;
   payload: any;
 }
 
-export interface AntSourceEvent extends AntEvent {}
-
-export interface AntResultEvent extends AntEvent {
+export interface AntEvent extends AntSourceEvent {
   toResult: boolean;
 }
 
@@ -49,7 +47,7 @@ export interface AntAdditionalConfig {
   argsToModifiers?: any[];
 }
 
-export const fromObservable = (source$: Observable<AntSourceEvent>, config: AntConfig): Observable<AntResultEvent> => {
+export const fromObservable = (source$: Observable<AntSourceEvent>, config: AntConfig): Observable<AntEvent> => {
   // validate configs
   const sourceObject = mapper.mapSingleSourceToSourceObject(source$, config.sources, config.additionalConfig);
   const resultObject = mapper.mapResultsDefinitionsToSourceObject(sourceObject, config.results, config.additionalConfig);
@@ -59,7 +57,7 @@ export const fromObservable = (source$: Observable<AntSourceEvent>, config: AntC
 
   const result$ = Observable
     .from(Object.entries(resultObject))
-    .map((el): Observable<AntResultEvent> => {
+    .map((el): Observable<AntEvent> => {
       return el[1];
     })
     .mergeAll()
@@ -68,7 +66,7 @@ export const fromObservable = (source$: Observable<AntSourceEvent>, config: AntC
   return result$;
 };
 
-export const fromPromise = (source: Promise<AntSourceEvent[]>, config: AntConfig): Observable<AntResultEvent> => {
+export const fromPromise = (source: Promise<AntSourceEvent[]>, config: AntConfig): Observable<AntEvent> => {
   const source$: Subject<AntSourceEvent> = new Subject();
 
   const sourceObject = mapper.mapSingleSourceToSourceObject(source$, config.sources);
@@ -78,7 +76,7 @@ export const fromPromise = (source: Promise<AntSourceEvent[]>, config: AntConfig
 
   const result$ = Observable
     .from(Object.entries({ ...sourceObject, ...resultObject }))
-    .map((el): Observable<AntResultEvent> => {
+    .map((el): Observable<AntEvent> => {
       return el[1];
     })
     .mergeAll()

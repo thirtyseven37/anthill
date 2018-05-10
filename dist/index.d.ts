@@ -25,13 +25,11 @@ export interface AntConfig {
     results: AntResultDefinition[];
     additionalConfig?: AntAdditionalConfig;
 }
-export interface AntEvent {
+export interface AntSourceEvent {
     name: string;
     payload: any;
 }
-export interface AntSourceEvent extends AntEvent {
-}
-export interface AntResultEvent extends AntEvent {
+export interface AntEvent extends AntSourceEvent {
     toResult: boolean;
 }
 export interface AntAdditionalConfig {
@@ -39,5 +37,5 @@ export interface AntAdditionalConfig {
     argsToHandlers?: any[];
     argsToModifiers?: any[];
 }
-export declare const fromObservable: (source$: Observable<AntSourceEvent>, config: AntConfig) => Observable<AntResultEvent>;
-export declare const fromPromise: (source: Promise<AntSourceEvent[]>, config: AntConfig) => Observable<AntResultEvent>;
+export declare const fromObservable: (source$: Observable<AntSourceEvent>, config: AntConfig) => Observable<AntEvent>;
+export declare const fromPromise: (source: Promise<AntSourceEvent[]>, config: AntConfig) => Observable<AntEvent>;

@@ -110,6 +110,7 @@ const resultForDefinitionFromPart = (singleDefinitionResult$, part, index) => {
     return resultForDefinition$.map(buildResultDefinitionObject(part)).share();
 };
 const buildResultFromSourceEvent = R.curry((definition, sourceEvent) => {
+    console.log(definition.name, definition.toResult);
     return Object.assign({}, sourceEvent, { toResult: definition.toResult ? definition.toResult : false });
 });
 //# sourceMappingURL=mappers.js.map
