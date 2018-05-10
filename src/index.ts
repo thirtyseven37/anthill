@@ -1,16 +1,17 @@
 import * as mapper from "./mappers";
 import { Observable, Subject } from "@reactivex/rxjs";
+import { filterResult } from "./mappers";
 
 export interface AntSourceDefinition {
   name: string;
   modifiers?: Array<(...params: any[]) => any>;
-  toResult?: boolean;
+  toResult?: boolean | ((...params: any[]) => boolean);
   ifMissing?: any;
 }
 
 export interface AntResultDefinitionPart {
   name: string;
-  toResult?: boolean;
+  toResult?: boolean | ((...params: any[]) => boolean);
   ifMissing?: any;
 }
 
@@ -45,6 +46,7 @@ export interface AntAdditionalConfig {
   argsToCheckFunctions?: any[];
   argsToHandlers?: any[];
   argsToModifiers?: any[];
+  argsToResultFunctions?: any[];
 }
 
 export const fromObservable = (source$: Observable<AntSourceEvent>, config: AntConfig): Observable<AntEvent> => {
@@ -57,14 +59,15 @@ export const fromObservable = (source$: Observable<AntSourceEvent>, config: AntC
 
   const result$ = Observable
     .from(Object.entries(resultObject))
-    .map((el): Observable<AntEvent> => {
+    .map((el: [string, Observable<AntEvent>]): Observable<AntEvent> => {
       return el[1];
     })
     .mergeAll()
-    .filter((el: any) => el.toResult);
+    .filter(filterResult(config.additionalConfig));
 
   return result$;
 };
+
 
 export const fromPromise = (source: Promise<AntSourceEvent[]>, config: AntConfig): Observable<AntEvent> => {
   const source$: Subject<AntSourceEvent> = new Subject();

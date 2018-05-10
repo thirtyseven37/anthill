@@ -51,6 +51,18 @@ exports.mapSingleSourceToSourceObject = (source$, definitions, config = {}) => {
         return acc;
     }, {});
 };
+exports.filterResult = (config = {}) => {
+    return (antEvent) => {
+        if (typeof antEvent.toResult === "function") {
+            let args = [];
+            if (config.argsToResultFunctions && config.argsToResultFunctions.length > 0) {
+                args = [...config.argsToResultFunctions, ...args];
+            }
+            return antEvent.toResult(...args);
+        }
+        return antEvent.toResult;
+    };
+};
 /*
 |--------------------------------------------------------------------------
 | Private functions
@@ -99,7 +111,7 @@ const buildResultDefinitionObject = R.curry((part, payload) => {
     return {
         name: part.name,
         payload,
-        toResult: part.toResult === undefined ? true : part.toResult
+        toResult: part.toResult ? part.toResult : false
     };
 });
 const resultForDefinitionFromPart = (singleDefinitionResult$, part, index) => {
@@ -110,7 +122,6 @@ const resultForDefinitionFromPart = (singleDefinitionResult$, part, index) => {
     return resultForDefinition$.map(buildResultDefinitionObject(part)).share();
 };
 const buildResultFromSourceEvent = R.curry((definition, sourceEvent) => {
-    console.log(definition.name, definition.toResult);
     return Object.assign({}, sourceEvent, { toResult: definition.toResult ? definition.toResult : false });
 });
 //# sourceMappingURL=mappers.js.map

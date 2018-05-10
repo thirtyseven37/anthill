@@ -1,7 +1,8 @@
 import * as R from "ramda";
 import { Observable } from "@reactivex/rxjs";
 import {
-  AntAdditionalConfig, AntResultDefinition, AntResultDefinitionArgument, AntResultDefinitionPart, AntSourceDefinition,
+  AntAdditionalConfig, AntEvent, AntResultDefinition, AntResultDefinitionArgument, AntResultDefinitionPart,
+  AntSourceDefinition,
   AntSourceEvent
 } from "./index";
 
@@ -67,6 +68,21 @@ export const mapSingleSourceToSourceObject = (source$: Observable<AntSourceEvent
     }, {});
 };
 
+export const filterResult = (config: AntAdditionalConfig = {}): ((antEvent: AntEvent) => boolean) => {
+  return (antEvent: AntEvent): boolean => {
+    if (typeof antEvent.toResult === "function") {
+      let args: any[] = [];
+
+      if (config.argsToResultFunctions && config.argsToResultFunctions.length > 0) {
+        args = [...config.argsToResultFunctions, ...args];
+      }
+
+      return antEvent.toResult(...args);
+    }
+    return antEvent.toResult;
+  };
+};
+
 /*
 |--------------------------------------------------------------------------
 | Private functions
@@ -130,7 +146,7 @@ const buildResultDefinitionObject = R.curry((part: any, payload: any) => {
   return {
     name: part.name,
     payload,
-    toResult: part.toResult === undefined ? true : part.toResult
+    toResult: part.toResult ? part.toResult : false
   };
 });
 
@@ -145,8 +161,6 @@ const resultForDefinitionFromPart = (singleDefinitionResult$: any, part: AntResu
 };
 
 const buildResultFromSourceEvent = R.curry((definition: AntSourceDefinition, sourceEvent: AntSourceEvent) => {
-  console.log(definition.name, definition.toResult);
-
   return {
     ...sourceEvent,
     toResult: definition.toResult ? definition.toResult : false

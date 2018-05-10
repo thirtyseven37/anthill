@@ -2,8 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const mapper = require("./mappers");
 const rxjs_1 = require("@reactivex/rxjs");
+const mappers_1 = require("./mappers");
 exports.fromObservable = (source$, config) => {
     // validate configs
+    console.log("FROM PACKAGE");
     const sourceObject = mapper.mapSingleSourceToSourceObject(source$, config.sources, config.additionalConfig);
     const resultObject = mapper.mapResultsDefinitionsToSourceObject(sourceObject, config.results, config.additionalConfig);
     // const products$ = sourceObject['products']
@@ -14,7 +16,7 @@ exports.fromObservable = (source$, config) => {
         return el[1];
     })
         .mergeAll()
-        .filter((el) => el.toResult);
+        .filter(mappers_1.filterResult(config.additionalConfig));
     return result$;
 };
 exports.fromPromise = (source, config) => {

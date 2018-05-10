@@ -2,12 +2,12 @@ import { Observable } from "@reactivex/rxjs";
 export interface AntSourceDefinition {
     name: string;
     modifiers?: Array<(...params: any[]) => any>;
-    toResult?: boolean;
+    toResult?: boolean | ((...params: any[]) => boolean);
     ifMissing?: any;
 }
 export interface AntResultDefinitionPart {
     name: string;
-    toResult?: boolean;
+    toResult?: boolean | ((...params: any[]) => boolean);
     ifMissing?: any;
 }
 export interface AntResultDefinition {
@@ -36,6 +36,7 @@ export interface AntAdditionalConfig {
     argsToCheckFunctions?: any[];
     argsToHandlers?: any[];
     argsToModifiers?: any[];
+    argsToResultFunctions?: any[];
 }
 export declare const fromObservable: (source$: Observable<AntSourceEvent>, config: AntConfig) => Observable<AntEvent>;
 export declare const fromPromise: (source: Promise<AntSourceEvent[]>, config: AntConfig) => Observable<AntEvent>;
