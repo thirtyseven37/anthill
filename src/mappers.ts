@@ -25,19 +25,26 @@ export const mapResultsDefinitionsToSourceObject = (sourceObject: any, resultDef
     })
     .forEach((resultDefinition) => {
       const args: Array<Observable<any>> = resultDefinition.args
-        .filter((resultDefinitionArgument: AntResultDefinitionArgument) =>  {
+        .map((resultDefinitionArgument: AntResultDefinitionArgument) =>  {
           let args = [];
           if (config.argsToCheckFunctions && config.argsToCheckFunctions.length > 0) {
             args = config.argsToCheckFunctions;
           }
-          return !resultDefinitionArgument.check || resultDefinitionArgument.check(...args);
+
+          return !resultDefinitionArgument.check || resultDefinitionArgument.check(...args)
+            ? resultDefinitionArgument
+            : undefined;
         })
-        .map((arg: AntResultDefinitionArgument) => {
-          if (results[arg.name]) {
-            return results[arg.name].map((el: any) => el.payload);
-          } else {
-            return Observable.empty();
+        .map((arg: AntResultDefinitionArgument|undefined) => {
+          if (!!arg) {
+            if (results[arg.name]) {
+              return results[arg.name].map((el: any) => el.payload);
+            } else {
+              return Observable.empty();
+            }
           }
+
+          return Observable.empty();
         });
 
       const singleDefinitionResult$ = Observable
@@ -74,7 +81,7 @@ export const filterResult = (config: AntAdditionalConfig = {}): ((antEvent: AntE
       let args: any[] = [];
 
       if (config.argsToResultFunctions && config.argsToResultFunctions.length > 0) {
-        args = [...config.argsToResultFunctions, ...args];
+        args = [...config.argsToResultFunctions, ...args] as any;
       }
 
       return antEvent.toResult(...args);

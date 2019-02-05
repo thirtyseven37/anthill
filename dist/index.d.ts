@@ -30,7 +30,7 @@ export interface AntSourceEvent {
     payload: any;
 }
 export interface AntEvent extends AntSourceEvent {
-    toResult: boolean;
+    toResult: (...fnArgs: any[]) => boolean | boolean;
 }
 export interface AntAdditionalConfig {
     argsToCheckFunctions?: any[];

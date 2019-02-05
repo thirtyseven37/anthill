@@ -1,34 +1,66 @@
 {
-  "name": "@thirtyseven37/anthill",
-  "version": "0.2.7",
-  "description": "A Node.js module that manages Rx events.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "clean": "rm -rf dist/*",
-    "test": "./node_modules/.bin/mocha --require node_modules/ts-node/register \"test/src/**/*.ts\"",
-    "build": "npm run clean  && ./node_modules/.bin/tsc",
-    "watch": "nodemon --exec ./node_modules/.bin/ts-node -- ./src/index.ts"
+  "_from": "@thirtyseven37/anthill@^0.2.7",
+  "_id": "@thirtyseven37/anthill@0.2.7",
+  "_inBundle": false,
+  "_integrity": "sha512-4PkIdiNpzQ7+cnYFxbZpCfadk2ozXXjOkFo4iM53nSJh4oXERiFaZPT1X7JK8ijFxjRTg98rgmjvgmrvGRQY5A==",
+  "_location": "/@thirtyseven37/anthill",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "range",
+    "registry": true,
+    "raw": "@thirtyseven37/anthill@^0.2.7",
+    "name": "@thirtyseven37/anthill",
+    "escapedName": "@thirtyseven37%2fanthill",
+    "scope": "@thirtyseven37",
+    "rawSpec": "^0.2.7",
+    "saveSpec": null,
+    "fetchSpec": "^0.2.7"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/thirtyseven37/anthill"
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/@thirtyseven37/anthill/-/anthill-0.2.7.tgz",
+  "_shasum": "3a32d52d81f24fcb47477dcb807c52735f286eb6",
+  "_spec": "@thirtyseven37/anthill@^0.2.7",
+  "_where": "/home/michal/Projects/searchRepos/search",
+  "author": {
+    "name": "p.sienkiewicz@tme3c.com && m.lepek@tme3c.com"
   },
-  "author": "p.sienkiewicz@tme3c.com && m.lepek@tme3c.com",
-  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/thirtyseven37/anthill/issues"
+  },
+  "bundleDependencies": false,
   "dependencies": {
     "@reactivex/rxjs": "^5.5.10",
     "@types/ramda": "^0.25.24",
     "ramda": "^0.25.0",
     "typescript": "^2.6.2"
   },
+  "deprecated": false,
+  "description": "A Node.js module that manages Rx events.",
   "devDependencies": {
     "@types/chai": "^4.1.2",
     "@types/mocha": "^2.2.48",
+    "chai": "^4.1.2",
+    "mocha": "^4.1.0",
     "nodemon": "^1.14.11",
     "ts-node": "^4.1.0",
-    "tslint": "^5.9.1",
-    "chai": "^4.1.2",
-    "mocha": "^4.1.0"
-  }
+    "tslint": "^5.9.1"
+  },
+  "homepage": "https://github.com/thirtyseven37/anthill#readme",
+  "license": "ISC",
+  "main": "dist/index.js",
+  "name": "@thirtyseven37/anthill",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thirtyseven37/anthill.git"
+  },
+  "scripts": {
+    "build": "npm run clean  && ./node_modules/.bin/tsc",
+    "clean": "rm -rf dist/*",
+    "test": "mocha --require node_modules/ts-node/register \"test/src/**/*.ts\"",
+    "watch": "nodemon --exec ./node_modules/.bin/ts-node -- ./src/index.ts"
+  },
+  "types": "dist/index.d.ts",
+  "version": "0.2.7"
 }

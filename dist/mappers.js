@@ -19,20 +19,25 @@ exports.mapResultsDefinitionsToSourceObject = (sourceObject, resultDefinitions, 
     })
         .forEach((resultDefinition) => {
         const args = resultDefinition.args
-            .filter((resultDefinitionArgument) => {
+            .map((resultDefinitionArgument) => {
             let args = [];
             if (config.argsToCheckFunctions && config.argsToCheckFunctions.length > 0) {
                 args = config.argsToCheckFunctions;
             }
-            return !resultDefinitionArgument.check || resultDefinitionArgument.check(...args);
+            return !resultDefinitionArgument.check || resultDefinitionArgument.check(...args)
+                ? resultDefinitionArgument
+                : undefined;
         })
             .map((arg) => {
-            if (results[arg.name]) {
-                return results[arg.name].map((el) => el.payload);
+            if (!!arg) {
+                if (results[arg.name]) {
+                    return results[arg.name].map((el) => el.payload);
+                }
+                else {
+                    return rxjs_1.Observable.empty();
+                }
             }
-            else {
-                return rxjs_1.Observable.empty();
-            }
+            return rxjs_1.Observable.empty();
         });
         const singleDefinitionResult$ = rxjs_1.Observable
             .zip(...args)

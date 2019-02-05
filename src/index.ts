@@ -39,7 +39,7 @@ export interface AntSourceEvent {
 }
 
 export interface AntEvent extends AntSourceEvent {
-  toResult: boolean;
+  toResult: (...fnArgs: any[]) => boolean | boolean;
 }
 
 export interface AntAdditionalConfig {
@@ -59,7 +59,7 @@ export const fromObservable = (source$: Observable<AntSourceEvent>, config: AntC
 
   const result$ = Observable
     .from(Object.entries(resultObject))
-    .map((el: [string, Observable<AntEvent>]): Observable<AntEvent> => {
+    .map((el: any): Observable<AntEvent> => {
       return el[1];
     })
     .mergeAll()
@@ -80,7 +80,7 @@ export const fromPromise = (source: Promise<AntSourceEvent[]>, config: AntConfig
   const result$ = Observable
     .from(Object.entries({ ...sourceObject, ...resultObject }))
     .map((el): Observable<AntEvent> => {
-      return el[1];
+      return el[1] as Observable<AntEvent>;
     })
     .mergeAll()
     .filter((el: any) => el.toResult);
