@@ -29,13 +29,11 @@ exports.mapResultsDefinitionsToSourceObject = (sourceObject, resultDefinitions, 
                 : undefined;
         })
             .map((arg) => {
-            if (!!arg) {
-                if (results[arg.name]) {
-                    return results[arg.name].map((el) => el.payload);
-                }
-                else {
-                    return rxjs_1.Observable.empty();
-                }
+            if (arg === undefined) {
+                return rxjs_1.Observable.from([undefined]);
+            }
+            if (results[arg.name]) {
+                return results[arg.name].map((el) => el.payload);
             }
             return rxjs_1.Observable.empty();
         });

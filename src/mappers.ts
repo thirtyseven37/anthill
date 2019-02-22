@@ -36,12 +36,12 @@ export const mapResultsDefinitionsToSourceObject = (sourceObject: any, resultDef
             : undefined;
         })
         .map((arg: AntResultDefinitionArgument|undefined) => {
-          if (!!arg) {
-            if (results[arg.name]) {
-              return results[arg.name].map((el: any) => el.payload);
-            } else {
-              return Observable.empty();
-            }
+          if (arg === undefined) {
+            return Observable.from([undefined]);
+          }
+
+          if (results[arg.name]) {
+            return results[arg.name].map((el: any) => el.payload);
           }
 
           return Observable.empty();
