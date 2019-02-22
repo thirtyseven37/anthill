@@ -62,5 +62,5 @@
     "watch": "nodemon --exec ./node_modules/.bin/ts-node -- ./src/index.ts"
   },
   "types": "dist/index.d.ts",
-  "version": "0.2.8"
+  "version": "0.2.9"
 }

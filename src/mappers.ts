@@ -13,51 +13,25 @@ import {
 */
 
 export const mapResultsDefinitionsToSourceObject = (sourceObject: any, resultDefinitions: AntResultDefinition[], config: AntAdditionalConfig = {}): any => {
-  const results: any = sourceObject;
+  const results = sourceObject;
+
+  const fetchPayloadForSingleArg = (arg: AntResultDefinitionArgument | undefined) => (undefined !== arg && results[arg.name])
+    ? results[arg.name].map((el: any) => el.payload)
+    : Observable.empty();
+
+  const validResultDefArgsToPayload = (resultDefinition: AntResultDefinition) => resultDefinition.args
+    .map(validSingleArg(config))
+    .map(fetchPayloadForSingleArg);
 
   resultDefinitions
-    .filter((resultDefinition) =>  {
-      let args = [];
-      if (config.argsToCheckFunctions && config.argsToCheckFunctions.length > 0) {
-        args = config.argsToCheckFunctions;
-      }
-      return !resultDefinition.check || resultDefinition.check(...args);
-    })
+    .filter(validDefinition(config))
     .forEach((resultDefinition) => {
-      const args: Array<Observable<any>> = resultDefinition.args
-        .map((resultDefinitionArgument: AntResultDefinitionArgument) =>  {
-          let args = [];
-          if (config.argsToCheckFunctions && config.argsToCheckFunctions.length > 0) {
-            args = config.argsToCheckFunctions;
-          }
-
-          return !resultDefinitionArgument.check || resultDefinitionArgument.check(...args)
-            ? resultDefinitionArgument
-            : undefined;
-        })
-        .map((arg: AntResultDefinitionArgument|undefined) => {
-          if (!!arg) {
-            if (results[arg.name]) {
-              return results[arg.name].map((el: any) => el.payload);
-            } else {
-              return Observable.empty();
-            }
-          }
-
-          return Observable.empty();
-        });
-
-      const singleDefinitionResult$ = Observable
-        .zip(...args)
+      const singleDefinitionResult$ = Observable.zip(...validResultDefArgsToPayload(resultDefinition))
         .map(getHandlerFromResultDefinition(resultDefinition, config))
         .share();
 
-      resultDefinition.parts.forEach(
-        (part: AntResultDefinitionPart, index) => results[part.name] = resultForDefinitionFromPart(
-          singleDefinitionResult$,
-          part,
-          index
-        )
+      resultDefinition.parts.forEach((part: AntResultDefinitionPart, index) =>
+        results[part.name] = resultForDefinitionFromPart(singleDefinitionResult$, part, index)
       );
     });
 
@@ -69,10 +43,7 @@ export const mapSingleSourceToSourceObject = (source$: Observable<AntSourceEvent
 
   return definitions
     .map(mapSingleEventToStream(shared$, config))
-    .reduce((acc: any, { stream$, name }) => {
-      acc[name] = stream$;
-      return acc;
-    }, {});
+    .reduce((acc: any, { stream$, name }) => acc[name] = stream$, {});
 };
 
 export const filterResult = (config: AntAdditionalConfig = {}): ((antEvent: AntEvent) => boolean) => {
@@ -95,6 +66,24 @@ export const filterResult = (config: AntAdditionalConfig = {}): ((antEvent: AntE
 | Private functions
 |--------------------------------------------------------------------------
 */
+
+const validDefinition = (config: AntAdditionalConfig) => (resultDefinition: AntResultDefinition) => {
+  const args = (config.argsToCheckFunctions && config.argsToCheckFunctions.length > 0)
+    ? config.argsToCheckFunctions
+    : [];
+
+  return !resultDefinition.check || resultDefinition.check(...args);
+};
+
+const validSingleArg = (config: AntAdditionalConfig) => (resultDefinitionArgument: AntResultDefinitionArgument) =>  {
+  const tmpArgs = (config.argsToCheckFunctions && config.argsToCheckFunctions.length > 0)
+    ? config.argsToCheckFunctions
+    : [];
+
+  return !resultDefinitionArgument.check || resultDefinitionArgument.check(...tmpArgs)
+    ? resultDefinitionArgument
+    : undefined;
+};
 
 const mapSingleEventToStream = R.curry((shared$: Observable<AntSourceEvent>, config: AntAdditionalConfig, definition: AntSourceDefinition): { stream$: Observable<any>, name: string } => {
   let stream$ = shared$
