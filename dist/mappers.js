@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const R = require("ramda");
-const rxjs_1 = require("@reactivex/rxjs");
+const rxjs_1 = require("rxjs");
+const operators_1 = require("rxjs/operators");
 /*
 |--------------------------------------------------------------------------
 | Exported functions
@@ -20,33 +21,31 @@ exports.mapResultsDefinitionsToSourceObject = (sourceObject, resultDefinitions, 
         .forEach((resultDefinition) => {
         const args = resultDefinition.args
             .map((resultDefinitionArgument) => {
-            let args = [];
+            let argsArr = [];
             if (config.argsToCheckFunctions && config.argsToCheckFunctions.length > 0) {
-                args = config.argsToCheckFunctions;
+                argsArr = config.argsToCheckFunctions;
             }
-            return !resultDefinitionArgument.check || resultDefinitionArgument.check(...args)
+            return !resultDefinitionArgument.check || resultDefinitionArgument.check(...argsArr)
                 ? resultDefinitionArgument
                 : undefined;
         })
             .map((arg) => {
             if (arg === undefined) {
-                return rxjs_1.Observable.from([undefined]);
+                return rxjs_1.from([undefined]);
             }
             if (results[arg.name]) {
-                return results[arg.name].map((el) => el.payload);
+                return results[arg.name].pipe(operators_1.map((el) => el.payload));
             }
-            return rxjs_1.Observable.empty();
+            return rxjs_1.EMPTY;
         });
-        const singleDefinitionResult$ = rxjs_1.Observable
-            .zip(...args)
-            .map(getHandlerFromResultDefinition(resultDefinition, config))
-            .share();
+        const singleDefinitionResult$ = rxjs_1.zip(...args)
+            .pipe(operators_1.map(getHandlerFromResultDefinition(resultDefinition, config)), operators_1.share());
         resultDefinition.parts.forEach((part, index) => results[part.name] = resultForDefinitionFromPart(singleDefinitionResult$, part, index));
     });
     return results;
 };
 exports.mapSingleSourceToSourceObject = (source$, definitions, config = {}) => {
-    const shared$ = source$.share();
+    const shared$ = source$.pipe(operators_1.share());
     return definitions
         .map(mapSingleEventToStream(shared$, config))
         .reduce((acc, { stream$, name }) => {
@@ -72,19 +71,16 @@ exports.filterResult = (config = {}) => {
 |--------------------------------------------------------------------------
 */
 const mapSingleEventToStream = R.curry((shared$, config, definition) => {
-    let stream$ = shared$
-        .filter((sourceEvent) => sourceEvent.name === definition.name)
-        .map(buildResultFromSourceEvent(definition))
-        .map(runModifiers(definition, config));
+    let stream$ = shared$.pipe(operators_1.filter((sourceEvent) => sourceEvent.name === definition.name), operators_1.map(buildResultFromSourceEvent(definition)), operators_1.map(runModifiers(definition, config)));
     if (definition.hasOwnProperty("ifMissing")) {
-        stream$ = stream$.defaultIfEmpty({
+        stream$ = stream$.pipe(operators_1.defaultIfEmpty({
             name: definition.name,
             payload: definition.ifMissing,
             toResult: definition.toResult ? definition.toResult : false
-        });
+        }));
     }
     const name = definition.name;
-    return { stream$: stream$.share(), name };
+    return { stream$: stream$.pipe(operators_1.share()), name };
 });
 const runModifiers = R.curry((definition, config, sourceEvent) => {
     if (!definition.modifiers) {
@@ -110,21 +106,17 @@ const getHandlerFromResultDefinition = R.curry((resultDefinition, config, argsAs
     }
     return handlerResult;
 });
-const buildResultDefinitionObject = R.curry((part, payload) => {
-    return {
-        name: part.name,
-        payload,
-        toResult: part.toResult ? part.toResult : false
-    };
-});
+const buildResultDefinitionObject = R.curry((part, payload) => ({
+    name: part.name,
+    payload,
+    toResult: part.toResult ? part.toResult : false
+}));
 const resultForDefinitionFromPart = (singleDefinitionResult$, part, index) => {
-    let resultForDefinition$ = singleDefinitionResult$.map((resultArray) => resultArray[index]);
+    let resultForDefinition$ = singleDefinitionResult$.pipe(operators_1.map((resultArray) => resultArray[index]));
     if (part.hasOwnProperty("ifMissing")) {
-        resultForDefinition$ = resultForDefinition$.defaultIfEmpty(part.ifMissing);
+        resultForDefinition$ = resultForDefinition$.pipe(operators_1.defaultIfEmpty(part.ifMissing));
     }
-    return resultForDefinition$.map(buildResultDefinitionObject(part)).share();
+    return resultForDefinition$.pipe(operators_1.map(buildResultDefinitionObject(part)), operators_1.share());
 };
-const buildResultFromSourceEvent = R.curry((definition, sourceEvent) => {
-    return Object.assign({}, sourceEvent, { toResult: definition.toResult ? definition.toResult : false });
-});
+const buildResultFromSourceEvent = R.curry((definition, sourceEvent) => (Object.assign({}, sourceEvent, { toResult: definition.toResult ? definition.toResult : false })));
 //# sourceMappingURL=mappers.js.map

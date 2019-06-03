@@ -1,4 +1,4 @@
-import { Observable } from "@reactivex/rxjs";
+import { Observable } from "rxjs";
 export interface AntSourceDefinition {
     name: string;
     modifiers?: Array<(...params: any[]) => any>;
