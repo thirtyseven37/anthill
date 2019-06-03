@@ -1,5 +1,6 @@
-import * as Rx from "@reactivex/rxjs";
-import { Observable } from "@reactivex/rxjs";
+import { Observable, from, of } from "rxjs";
+import { concatMap, delay } from "rxjs/operators";
+
 import { AntConfig, AntResultDefinition, AntSourceDefinition, AntSourceEvent } from "../../src/index";
 
 interface Product {
@@ -81,18 +82,8 @@ const eventsToMock: AntSourceEvent[] = [
   }
 ];
 
-export const getMockedSource = (): Observable<AntSourceEvent> => {
-  const shuffledEvents = shuffleArray(eventsToMock);
-  // console.log('shuffled array:', shuffledEvents.map((event: any) => event.name));
-
-  const events$ = Rx.Observable
-    .from(shuffledEvents)
-    .concatMap((val) => {
-      return Rx.Observable.of(val).delay(300);
-    });
-
-  return events$;
-};
+export const getMockedSource = (): Observable<AntSourceEvent> => from(shuffleArray(eventsToMock))
+  .pipe(concatMap((val) => of(val).pipe(delay(300))));
 
 export const getMockedConfig = (): AntConfig => {
   return { sources, results };
@@ -114,7 +105,7 @@ const mapProductsSymbolToUpper = (products: Product[]): Product[] => {
       ...prod,
       symbol: prod.symbol.toUpperCase(),
       checked: true
-    }
+    };
   });
 };
 
@@ -134,10 +125,10 @@ const sources: AntSourceDefinition[] = [
 const results: AntResultDefinition[] = [
   {
     parts: [
-      {name: "params_with_values", toResult: true, ifMissing: []},
-      {name: "test_result", toResult: true, ifMissing: "test_not_working"}
+      { name: "params_with_values", toResult: true, ifMissing: [] },
+      { name: "test_result", toResult: true, ifMissing: "test_not_working" }
     ],
-    args: ["parameters", "values"],
+    args: [ { name: "parameters" }, { name: "values" }],
     check: () => true,
     handler: (params: Parameter[], values: Value[]) => {
       const accValues = values.reduce((acc: any, value) => {

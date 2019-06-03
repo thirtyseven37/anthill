@@ -1,5 +1,7 @@
+import { from, Observable, Subject } from "rxjs";
+import { map, flatMap, filter, mergeAll } from "rxjs/operators";
+
 import * as mapper from "./mappers";
-import { Observable, Subject } from "@reactivex/rxjs";
 import { filterResult } from "./mappers";
 
 export interface AntSourceDefinition {
@@ -54,45 +56,28 @@ export const fromObservable = (source$: Observable<AntSourceEvent>, config: AntC
   const sourceObject = mapper.mapSingleSourceToSourceObject(source$, config.sources, config.additionalConfig);
   const resultObject = mapper.mapResultsDefinitionsToSourceObject(sourceObject, config.results, config.additionalConfig);
 
-  // const products$ = sourceObject['products']
-  //   .subscribe(console.log, console.error, () => { console.log('FINISHED') });
-
-  const result$ = Observable
-    .from(Object.entries(resultObject))
-    .map((el: any): Observable<AntEvent> => {
-      return el[1];
-    })
-    .mergeAll()
-    .filter(filterResult(config.additionalConfig));
-
-  return result$;
+  return from(Object.entries(resultObject)).pipe(
+    map((el: any) => el[1] as Observable<AntEvent>),
+    mergeAll(),
+    filter(filterResult(config.additionalConfig))
+  );
 };
-
 
 export const fromPromise = (source: Promise<AntSourceEvent[]>, config: AntConfig): Observable<AntEvent> => {
   const source$: Subject<AntSourceEvent> = new Subject();
 
   const sourceObject = mapper.mapSingleSourceToSourceObject(source$, config.sources);
   const resultObject = mapper.mapResultsDefinitionsToSourceObject(sourceObject, config.results);
-  // const products$ = sourceObject['products']
-  //   .subscribe(console.log, console.error, () => { console.log('FINISHED') });
 
-  const result$ = Observable
-    .from(Object.entries({ ...sourceObject, ...resultObject }))
-    .map((el): Observable<AntEvent> => {
-      return el[1] as Observable<AntEvent>;
-    })
-    .mergeAll()
-    .filter((el: any) => el.toResult);
+  const result$ = from(Object.entries({ ...sourceObject, ...resultObject })).pipe(
+    map((el) => el[1] as Observable<AntEvent>),
+    mergeAll(),
+    filter((el: any) => el.toResult)
+  );
 
-  Observable
-    .fromPromise(source)
-    .flatMap((el) => el)
-    .subscribe(
-      (value) => source$.next(value),
-      (error) => source$.error(error),
-      () => source$.complete()
-    );
+  from(source)
+    .pipe(flatMap((el) => el))
+    .subscribe(source$);
 
   return result$;
 };

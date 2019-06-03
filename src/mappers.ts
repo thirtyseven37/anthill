@@ -1,5 +1,7 @@
 import * as R from "ramda";
-import { Observable } from "@reactivex/rxjs";
+import { Observable, from, zip, EMPTY } from "rxjs";
+import { map, filter, share, defaultIfEmpty } from "rxjs/operators";
+
 import {
   AntAdditionalConfig, AntEvent, AntResultDefinition, AntResultDefinitionArgument, AntResultDefinitionPart,
   AntSourceDefinition,
@@ -26,31 +28,33 @@ export const mapResultsDefinitionsToSourceObject = (sourceObject: any, resultDef
     .forEach((resultDefinition) => {
       const args: Array<Observable<any>> = resultDefinition.args
         .map((resultDefinitionArgument: AntResultDefinitionArgument) =>  {
-          let args = [];
+          let argsArr = [];
+
           if (config.argsToCheckFunctions && config.argsToCheckFunctions.length > 0) {
-            args = config.argsToCheckFunctions;
+            argsArr = config.argsToCheckFunctions;
           }
 
-          return !resultDefinitionArgument.check || resultDefinitionArgument.check(...args)
+          return !resultDefinitionArgument.check || resultDefinitionArgument.check(...argsArr)
             ? resultDefinitionArgument
             : undefined;
         })
         .map((arg: AntResultDefinitionArgument|undefined) => {
           if (arg === undefined) {
-            return Observable.from([undefined]);
+            return from([undefined]);
           }
 
           if (results[arg.name]) {
-            return results[arg.name].map((el: any) => el.payload);
+            return results[arg.name].pipe(map((el: any) => el.payload));
           }
 
-          return Observable.empty();
+          return EMPTY;
         });
 
-      const singleDefinitionResult$ = Observable
-        .zip(...args)
-        .map(getHandlerFromResultDefinition(resultDefinition, config))
-        .share();
+      const singleDefinitionResult$ = zip(...args)
+        .pipe(
+          map(getHandlerFromResultDefinition(resultDefinition, config)),
+          share()
+        );
 
       resultDefinition.parts.forEach(
         (part: AntResultDefinitionPart, index) => results[part.name] = resultForDefinitionFromPart(
@@ -65,7 +69,7 @@ export const mapResultsDefinitionsToSourceObject = (sourceObject: any, resultDef
 };
 
 export const mapSingleSourceToSourceObject = (source$: Observable<AntSourceEvent>, definitions: AntSourceDefinition[], config: AntAdditionalConfig = {}): any => {
-  const shared$ = source$.share();
+  const shared$ = source$.pipe(share());
 
   return definitions
     .map(mapSingleEventToStream(shared$, config))
@@ -97,22 +101,25 @@ export const filterResult = (config: AntAdditionalConfig = {}): ((antEvent: AntE
 */
 
 const mapSingleEventToStream = R.curry((shared$: Observable<AntSourceEvent>, config: AntAdditionalConfig, definition: AntSourceDefinition): { stream$: Observable<any>, name: string } => {
-  let stream$ = shared$
-    .filter((sourceEvent: AntSourceEvent) => sourceEvent.name === definition.name)
-    .map(buildResultFromSourceEvent(definition))
-    .map(runModifiers(definition, config));
+  let stream$ = shared$.pipe(
+    filter((sourceEvent: AntSourceEvent) => sourceEvent.name === definition.name),
+    map(buildResultFromSourceEvent(definition)),
+    map(runModifiers(definition, config))
+  );
 
   if (definition.hasOwnProperty("ifMissing")) {
-    stream$ = stream$.defaultIfEmpty({
-      name: definition.name,
-      payload: definition.ifMissing,
-      toResult: definition.toResult ? definition.toResult : false
-    });
+    stream$ = stream$.pipe(
+      defaultIfEmpty({
+        name: definition.name,
+        payload: definition.ifMissing,
+        toResult: definition.toResult ? definition.toResult : false
+      })
+    );
   }
 
   const name = definition.name;
 
-  return {stream$: stream$.share(), name};
+  return {stream$: stream$.pipe(share()), name};
 });
 
 const runModifiers = R.curry((definition: AntSourceDefinition, config: AntAdditionalConfig, sourceEvent: any) => {
@@ -149,27 +156,26 @@ const getHandlerFromResultDefinition = R.curry((resultDefinition: any, config: A
   return handlerResult;
 });
 
-const buildResultDefinitionObject = R.curry((part: any, payload: any) => {
-  return {
-    name: part.name,
-    payload,
-    toResult: part.toResult ? part.toResult : false
-  };
-});
+const buildResultDefinitionObject = R.curry((part: any, payload: any) => ({
+  name: part.name,
+  payload,
+  toResult: part.toResult ? part.toResult : false
+}));
 
 const resultForDefinitionFromPart = (singleDefinitionResult$: any, part: AntResultDefinitionPart, index: any) => {
-  let resultForDefinition$ = singleDefinitionResult$.map((resultArray: any) => resultArray[index]);
+  let resultForDefinition$ = singleDefinitionResult$.pipe(map((resultArray: any) => resultArray[index]));
 
   if (part.hasOwnProperty("ifMissing")) {
-    resultForDefinition$ = resultForDefinition$.defaultIfEmpty(part.ifMissing);
+    resultForDefinition$ = resultForDefinition$.pipe(defaultIfEmpty(part.ifMissing));
   }
 
-  return resultForDefinition$.map(buildResultDefinitionObject(part)).share();
+  return resultForDefinition$.pipe(
+    map(buildResultDefinitionObject(part)),
+    share()
+  );
 };
 
-const buildResultFromSourceEvent = R.curry((definition: AntSourceDefinition, sourceEvent: AntSourceEvent) => {
-  return {
-    ...sourceEvent,
-    toResult: definition.toResult ? definition.toResult : false
-  };
-});
+const buildResultFromSourceEvent = R.curry((definition: AntSourceDefinition, sourceEvent: AntSourceEvent) => ({
+  ...sourceEvent,
+  toResult: definition.toResult ? definition.toResult : false
+}));

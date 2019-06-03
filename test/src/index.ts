@@ -1,4 +1,6 @@
 import { expect } from "chai";
+import { map, filter, reduce } from "rxjs/operators";
+
 import { fromObservable } from "../../src/index";
 import { getMockedSource, getMockedConfig } from "../mock/source";
 
@@ -34,14 +36,16 @@ describe("Anthill main exported functions test", () => {
     };
 
     const testFromObservable = fromObservable(getMockedSource(), getMockedConfig())
-      .map((response) => response.payload)
-      .filter(Array.isArray)
-      .reduce(reduceObjectArrays, [])
-      .map((actual) => actual.sort(sortObjectById))
+      .pipe(
+        map((response) => response.payload),
+        filter(Array.isArray),
+        reduce(reduceObjectArrays, []),
+        map((actual) => actual.sort(sortObjectById))
+      )
       .toPromise();
 
     testFromObservable
-      .then((actual) => expect(expected).to.be.deep.equal(actual))
+      .then((actual) => expect(actual).to.be.deep.equal(expected))
       .catch(console.log);
   });
 });
