@@ -33,7 +33,7 @@
   "dependencies": {
     "@types/ramda": "^0.25.24",
     "ramda": "^0.25.0",
-    "rxjs": "^6.5.2",
+    "rxjs": "6.0.0",
     "typescript": "^2.6.2"
   },
   "deprecated": false,
@@ -62,5 +62,5 @@
     "watch": "nodemon --exec ./node_modules/.bin/ts-node -- ./src/index.ts"
   },
   "types": "dist/index.d.ts",
-  "version": "0.2.12"
+  "version": "0.2.14"
 }
