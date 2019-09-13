@@ -69,7 +69,7 @@ export const fromPromise = (source: Promise<AntSourceEvent[]>, config: AntConfig
   const sourceObject = mapper.mapSingleSourceToSourceObject(source$, config.sources);
   const resultObject = mapper.mapResultsDefinitionsToSourceObject(sourceObject, config.results);
 
-  const result$ = from(Object.entries({ ...sourceObject, ...resultObject })).pipe(
+  const result$ = from(Object.entries({...sourceObject, ...resultObject})).pipe(
     map((el) => el[1] as Observable<AntEvent>),
     mergeAll(),
     filter((el: any) => el.toResult)

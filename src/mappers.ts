@@ -18,7 +18,7 @@ export const mapResultsDefinitionsToSourceObject = (sourceObject: any, resultDef
   const results: any = sourceObject;
 
   resultDefinitions
-    .filter((resultDefinition) =>  {
+    .filter((resultDefinition) => {
       let args = [];
       if (config.argsToCheckFunctions && config.argsToCheckFunctions.length > 0) {
         args = config.argsToCheckFunctions;
@@ -27,7 +27,7 @@ export const mapResultsDefinitionsToSourceObject = (sourceObject: any, resultDef
     })
     .forEach((resultDefinition) => {
       const args: Array<Observable<any>> = resultDefinition.args
-        .map((resultDefinitionArgument: AntResultDefinitionArgument) =>  {
+        .map((resultDefinitionArgument: AntResultDefinitionArgument) => {
           let argsArr = [];
 
           if (config.argsToCheckFunctions && config.argsToCheckFunctions.length > 0) {
@@ -38,7 +38,7 @@ export const mapResultsDefinitionsToSourceObject = (sourceObject: any, resultDef
             ? resultDefinitionArgument
             : undefined;
         })
-        .map((arg: AntResultDefinitionArgument|undefined) => {
+        .map((arg: AntResultDefinitionArgument | undefined) => {
           if (arg === undefined) {
             return from([undefined]);
           }
@@ -73,7 +73,7 @@ export const mapSingleSourceToSourceObject = (source$: Observable<AntSourceEvent
 
   return definitions
     .map(mapSingleEventToStream(shared$, config))
-    .reduce((acc: any, { stream$, name }) => {
+    .reduce((acc: any, {stream$, name}) => {
       acc[name] = stream$;
       return acc;
     }, {});
